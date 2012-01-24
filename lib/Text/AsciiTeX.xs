@@ -4,22 +4,24 @@
 
 #include <asciiTeX.h>
 
-SV* render (SV* eq) {
-  int ll=80;
+SV* c_render (SV* eq, int ll) {
   int i, cols, rows;
   char **screen;
-  SV* ret = newRV_noinc((SV*)newAV());
+  AV* ret = newAV();
 
   screen = asciiTeX(SvPV_nolen(eq), ll, &cols, &rows);
 
   for (i = 0; i < rows; i++)
   {
-	av_push((AV *)SvRV(ret), newSVpvf("%s", screen[i]));
+	if (cols<0)
+		warn("%s\n", screen[i]);
+	else
+		av_push(ret, newSVpvf("%s", screen[i]));
 	free(screen[i]);
   }
   free(screen);
 
-  return ret;
+  return newRV_noinc((SV*)ret);
 }
 
 MODULE = Text::AsciiTeX		PACKAGE = Text::AsciiTeX	
@@ -27,6 +29,7 @@ MODULE = Text::AsciiTeX		PACKAGE = Text::AsciiTeX
 PROTOTYPES: DISABLE
 
 SV *
-render (eq)
+c_render (eq, ll)
 	SV*	eq
+	int	ll
 
